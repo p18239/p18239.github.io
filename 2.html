@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2 align="center">2</h2>
+
+<p id="demo"></p>
+
+<script>
+var person = {
+    s1 : "hi",
+    s2  : "hello",
+    s3       : 123,
+    s4  : "hey"
+};
+
+document.getElementById("demo").innerHTML =
+person.s1 + "<br>" + person.s2 + "<br>" + 
+person.s3  + "<br>"+ person.s4;
+</script>
+
+<p id="demo1"></p>
+
+<script>
+var s = [" hi ", " hello ", " hey  ",123];
+document.getElementById("demo1").innerHTML = s[0]+s[1]+s[2]+s[3];
+</script>
+
+</body>
+</html>
