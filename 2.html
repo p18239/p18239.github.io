@@ -5,18 +5,7 @@
 <center><h1><b>2</b><a href="index.html"><button onclick="">返回</button></a></h1></center>
 <p id="demo"></p>
 
-<script>
-var person = {
-    s1 : "hi",
-    s2  : "hello",
-    s3       : 123,
-    s4  : "hey"
-};
-
-document.getElementById("demo").innerHTML =
-person.s1 + "<br>" + person.s2 + "<br>" +
-person.s3  + "<br>"+ person.s4;
-</script>
+<script src="js/2.js"></script>
 
 <p id="demo1"></p>
 
@@ -59,12 +48,7 @@ document.getElementById("demo3").innerHTML = person.fullName();
 
 <p id="demo4"></p>
 
-<script>
-function toCelsius(f) {
-    return (5/9) * (f-32);
-}
-document.getElementById("demo4").innerHTML = toCelsius(86);
-</script>
+<script src="js/3.js"></script>
 
 <button onclick="document.getElementById('demo5').innerHTML=Date()">时间是</button>
 <p id="demo5"></p>
