@@ -13,7 +13,7 @@ document.getElementById("demo2").innerHTML = fruits2 +"<br>";
 var fruits3 = ["Banana", "Orange", "Apple", "Mango"];
 document.getElementById("demo3").innerHTML = "原数组：<br>" + fruits3;
 function u() {
-    fruits3.splice(2, 0, "Lemon", "Kiwi");
+    fruits3.splice(2, 2, "Lemon", "Kiwi");
     document.getElementById("demo4").innerHTML = "新数组：<br>" + fruits3;
 }
 var fruits4 = ["Banana", "Orange", "Apple", "Mango"];
