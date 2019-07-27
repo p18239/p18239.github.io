@@ -1,0 +1,16 @@
+@charset "UTF-8";
+html {min-width: 776px;}
+body { margin: 0px; padding: 0px;color:#000;
+font-size: 14px;line-height: 160%; text-align:center;
+backgroud:#6D89DD;}
+a {
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+    text-decoration: none;
+}
+a:link{ color: #E66133;}
+a:visited{color: #E66133;}
+a:hover{ color: #99340c;text-decoration: underline;}
+pre{text-indent: 0;background: #DDDDDD;padding:0;
+margin: 0;color: blue;  text-align:left}
