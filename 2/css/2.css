@@ -1,25 +1,8 @@
-html {min-width: 776px;}
-body { margin: 0px; padding: 0px;color:#000;
-    font-size: 14px;line-height: 160%; text-align:center;
-    backgroud:#6D89DD;}
-#fh {
-    margin: 0px;
-    padding: 0px;
-    border: 0px;
-    text-decoration: none;
-}
+html{font-size: 23px;}
+#fh{text-align: center;}
 #fh:link{ color: #E66133;}
 #fh:visited{color: #E66133;}
-#fh:hover{ color: #99340c;text-decoration: underline;}
-#container {
-    text-align: center;
-    width: 100px;
-    margin: 60px auto;
-    list-style: none;
-    padding: 0 77px;
-}
-#container ul { width: 400px;}
-#container li { display: inline;}
+#fh:hover{ color: #2a9924;}
 a.button {
     display: block;
     float: left;
@@ -77,3 +60,8 @@ a.green:hover {
     background: -webkit-gradient(linear, left top, left bottom, from(#a3cd5a), to(#cae285));
     background: -moz-linear-gradient(top, #a3cd5a, #cae285);
 }
+a:link,a:visited,a:hover {
+    color: #995c94;
+}
+div.bb:target { background: #0003ff;}
+div.rr:target { background: #ff001d;}
