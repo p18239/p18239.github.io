@@ -1,4 +1,4 @@
-html{font-size: 23px;}
+html{font-size: 200%;left:50%;}
 #fh{text-align: center;}
 #fh:link{ color: #E66133;}
 #fh:visited{color: #E66133;}
@@ -6,12 +6,13 @@ html{font-size: 23px;}
 a.button {
     display: block;
     float: left;
-    position: relative;
+    position: absolute;
+    left:50%;
     height: 25px;
     width: 80px;
     margin: 0 10px 18px 0;
     text-decoration: none;
-    font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font: 23px "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-weight: bold;
     line-height: 25px;
     text-align: center;
@@ -61,7 +62,8 @@ a.green:hover {
     background: -moz-linear-gradient(top, #a3cd5a, #cae285);
 }
 a:link,a:visited,a:hover {
-    color: #995c94;
+    color: #ff9bfa;
 }
-div.bb:target { background: #0003ff;}
-div.rr:target { background: #ff001d;}
+.c{left:50%;}
+#b:target { background: #0003ff;}
+#r:target { background: #ff001d;}
