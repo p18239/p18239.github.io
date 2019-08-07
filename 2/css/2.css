@@ -1,4 +1,4 @@
-html{font-size: 200%;left:50%;}
+html{font-size: 150%;left:50%;}
 #fh{text-align: center;}
 #fh:link{ color: #E66133;}
 #fh:visited{color: #E66133;}
@@ -64,6 +64,18 @@ a.green:hover {
 a:link,a:visited,a:hover {
     color: #ff9bfa;
 }
-.c{left:50%;}
+div{line-height: 25px;}
 #b:target { background: #0003ff;}
 #r:target { background: #ff001d;}
+#g{
+    font-size: 20px;
+    color: #7f00cc;
+    width: 600px;
+    height: 250px;
+    margin: 15px;
+    padding: 30px;
+    background-color: #66ff57;
+    border-style: dotted;
+    border-color: #5e57ff;
+    border-width: 10px;
+}
