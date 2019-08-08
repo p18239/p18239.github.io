@@ -61,9 +61,7 @@ a.green:hover {
     background: -webkit-gradient(linear, left top, left bottom, from(#a3cd5a), to(#cae285));
     background: -moz-linear-gradient(top, #a3cd5a, #cae285);
 }
-a:link,a:visited,a:hover {
-    color: #ff9bfa;
-}
+
 div{line-height: 25px;}
 #b:target { background: #0003ff;}
 #r:target { background: #ff001d;}
