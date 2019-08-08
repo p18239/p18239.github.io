@@ -1,4 +1,5 @@
 html{font-size: 150%;left:50%;}
+pre{font-size: 25px;letter-spacing: 1px;}
 #fh{text-align: center;}
 #fh:link{ color: #E66133;}
 #fh:visited{color: #E66133;}
@@ -66,7 +67,6 @@ div{line-height: 25px;}
 #b:target { background: #0003ff;}
 #r:target { background: #ff001d;}
 #g{
-    font-size: 20px;
     color: #7f00cc;
     width: 600px;
     height: 250px;
