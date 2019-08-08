@@ -1,8 +1,7 @@
 @charset "UTF-8";
 html {min-width: 776px;}
 body { margin: 0px; padding: 0px;color:#000;
-font-size: 14px;line-height: 160%; text-align:center;
-backgroud:#6D89DD;}
+font-size: 14px;line-height: 160%; text-align:center;}
 a {
     margin: 0px;
     padding: 0px;
