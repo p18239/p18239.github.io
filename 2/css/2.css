@@ -78,4 +78,6 @@ div{line-height: 25px;}
     border-style: dotted;
     border-color: #5e57ff;
     border-width: 10px;
+    visibility: hidden;
 }
+#g:target{visibility:visible;}
