@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Parser - Ultra Clean Edition</title>
+    <title>AI Parser - Final Fix Edition</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -14,12 +14,10 @@
     <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/highlight.min.js"></script>
 
     <style>
-        /* 样式保持不变，追求极致阅读体验 */
         :root {
             --bg: #f3f4f6; --panel: #ffffff; --border: #e5e7eb;
             --accent: #2563eb; --accent-hover: #1d4ed8;
             --text-main: #111827; --text-muted: #6b7280;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,19 +25,23 @@
         header { padding: 12px 24px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .logo { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px; }
         .logo span { color: var(--accent); }
+        .badge { font-size: 10px; background: #10b981; color: #ffffff; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: bold; }
         .toolbar { display: flex; gap: 12px; }
         button { background: var(--panel); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 6px; }
         button:hover { background: #f9fafb; color: var(--text-main); border-color: #d1d5db; }
         button.primary { background: var(--accent); color: white; border-color: var(--accent); }
         button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        
         .main-container { display: flex; flex: 1; padding: 16px; gap: 16px; height: calc(100vh - 53px); transition: var(--transition); }
-        .editor-box, .preview-box { background: var(--panel); border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: var(--shadow); transition: var(--transition); overflow: hidden; flex: 1; }
+        .editor-box, .preview-box { background: var(--panel); border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .main-container.read-only-mode .editor-box { flex: 0; opacity: 0; margin: 0; padding: 0; border: none; overflow: hidden; }
-        .main-container.read-only-mode .preview-box { flex: 1; max-width: 900px; margin: 0 auto; }
+        .main-container.read-only-mode .preview-box { flex: 1; max-width: 900px; margin: 0 auto; border-radius: 0; border: none; box-shadow: none; }
+        
         .label { padding: 12px 16px; font-size: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); background: #fcfcfd; letter-spacing: 0.05em; }
         textarea { flex: 1; border: none; padding: 20px; font-family: 'Fira Code', monospace; font-size: 14px; line-height: 1.6; outline: none; resize: none; background: transparent; color: var(--text-main); }
         .preview-content { flex: 1; overflow-y: auto; padding: 32px; line-height: 1.75; scroll-behavior: smooth; }
-        .markdown-body { font-size: 15px; color: #374151; }
+        
+        .markdown-body { font-size: 15px; color: #374151; word-wrap: break-word; }
         .markdown-body h1, .markdown-body h2, .markdown-body h3 { margin-top: 1.5em; margin-bottom: 0.75em; color: var(--text-main); font-weight: 600; }
         .markdown-body h1 { font-size: 1.75em; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
         .markdown-body h2 { font-size: 1.4em; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
@@ -49,21 +51,23 @@
         .markdown-body pre code { background: transparent; color: #e2e8f0; font-size: 0.9em; padding: 0; }
         .markdown-body blockquote { border-left: 4px solid var(--border); padding-left: 1em; color: var(--text-muted); margin-bottom: 1.2em; }
         .markdown-body ul, .markdown-body ol { padding-left: 1.5em; margin-bottom: 1.2em; }
-        .katex-display { margin: 1.2em 0; overflow-x: auto; padding: 10px 0; }
+        
+        .katex-display { margin: 1.2em 0; overflow-x: auto; overflow-y: hidden; padding: 10px 0; }
+
         @media (max-width: 768px) {
             header { padding: 12px 16px; }
             .toolbar button span { display: none; }
-            .main-container { flex-direction: column; padding: 12px; gap: 12px; }
-            .editor-box, .preview-box { flex: none; height: 50%; }
+            .main-container { flex-direction: column; padding: 0; gap: 0; }
+            .editor-box, .preview-box { flex: none; height: 50%; border-radius: 0; border-left: none; border-right: none; }
             .main-container.read-only-mode .preview-box { height: 100%; }
-            .preview-content { padding: 20px; }
+            .preview-content { padding: 16px; font-size: 14px; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo"><span>Math</span>Protect <span style="font-size: 10px; background: #e5e7eb; color: #4b5563; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">ULTRA CLEAN v2</span></div>
+    <div class="logo"><span>Math</span>Protect <span class="badge">BUG FIXED</span></div>
     <div class="toolbar">
         <button id="btn-copy" title="复制原文">📋 <span>复制原文</span></button>
         <button id="btn-clear" title="清空内容">🗑️ <span>清空</span></button>
@@ -73,8 +77,8 @@
 
 <div class="main-container" id="main-container">
     <div class="editor-box">
-        <div class="label">INPUT (AUTO-SAVED)</div>
-        <textarea id="editor" placeholder="在此粘贴..."></textarea>
+        <div class="label">INPUT AREA</div>
+        <textarea id="editor" placeholder="在此粘贴... 已经彻底解决了占位符泄露和套娃Bug。"></textarea>
     </div>
     <div class="preview-box">
         <div class="label">PREVIEW</div>
@@ -90,7 +94,6 @@
     const btnClear = document.getElementById('btn-clear');
     const btnCopy = document.getElementById('btn-copy');
 
-    // 开启 Marked 的智能换行 (保留单行回车)，极大提升 AI 文本阅读体验
     marked.use({ breaks: true, gfm: true });
 
     function updatePreview() {
@@ -104,54 +107,70 @@
 
         const mathVault = [];
         let vaultIndex = 0;
-        const wrapMath = (match) => {
-            const key = `MATHPROTECT_${vaultIndex++}`;
-            mathVault.push({ key, content: match });
+        const saveMath = (content) => {
+            const key = `KATHMATH${vaultIndex++}END`;
+            mathVault.push({ key, content });
             return key;
         };
 
-        // 【修复 1】自动纠错 AI 经常搞错的粗体前后空格问题
-        // 将 `** 加粗文本 **` 强行修正为 `**加粗文本**`，确保 Markdown 引擎必定解析
-        text = text.replace(/\*\*[ \t]+(.*?)[ \t]+\*\*/g, '**$1**');
+        // 第 1 步：修正 AI 直接输出的 \begin{} 裸环境（兼容旧版浏览器正则）
+        text = text.replace(/(^|[^$])\\begin\{([a-z*]+)\}([\s\S]+?)\\end\{\2\}(?!\$)/gi, (match, prefix, env, content) => {
+            return prefix + saveMath('$$\n\\begin{' + env + '}' + content + '\\end{' + env + '}\n$$');
+        });
 
-        // 【修复 2】兼容老旧浏览器，移除了导致极少数设备正则崩溃的 `v` 标志
-        text = text.replace(/(?<!\$)(?<!\$\$)\\begin\{([a-z*]+)\}(.*?)\\end\{\1\}(?!\$)(?!\$\$)/gs, '$$\n\\begin{$1}$2\\end{$1}\n$$');
+        // 第 2 步：【最高优先级】先把所有正确的数学块级公式提取出来保护！
+        text = text.replace(/\$\$([\s\S]+?)\$\$/g, (m) => saveMath(m));
+        text = text.replace(/\\\[([\s\S]+?)\\\]/g, (m) => saveMath(m));
 
-        // 提取保护数学公式
-        text = text.replace(/\$\$(.*?)\$\$/gs, wrapMath);
-        text = text.replace(/\\\[(.*?)\\\]/gs, wrapMath);
-        text = text.replace(/(?<!\$)\$(?!\s)(.*?\S)(?<!\s)\$(?!\d)/g, wrapMath);
-        text = text.replace(/\\\(.*?\\\)/g, wrapMath);
+        // 第 3 步：把正确的行内公式提取出来保护！
+        text = text.replace(/\\\(([\s\S]+?)\\\)/g, (m) => saveMath(m));
+        text = text.replace(/(^|[^$\\])\$([^$]+?)\$(?!\d)/g, (match, prefix, mathContent) => {
+            return prefix + saveMath('$' + mathContent + '$');
+        });
 
-        // 【修复 3】核心改动：清理正则防误杀换行
-        // 将所有的 \s 换成了 [ \t]（只匹配空格和制表符）。
-        // 这样 被清理时，只会删掉它前面的空格，坚决不吞掉上一行的回车！段落彻底安全了。
-        text = text.replace(/[ \t]*\[(?:cite:)?[ \t]*\^?[\d\s,\-]+\](?![ \t]*[:\(])|[ \t]*\[cite_(?:start|end|url)[^\]]*\]/gi, '');
+        // 第 4 步：【重点修复】因为上面几步已经把合法的公式全部变成了 KATHMATH...
+        // 所以现在扫描裸露变量，绝不可能再跑到原有的公式内部去捣乱了！
+        text = text.replace(/(^|[^a-zA-Z0-9_\\])([a-zA-Z]_([a-zA-Z0-9]+|\{[a-zA-Z0-9]+\}))([^a-zA-Z0-9_]|$)/g, (match, p1, p2, p3, p4) => {
+            return p1 + saveMath('$' + p2 + '$') + p4;
+        });
 
-        // 渲染 Markdown
+        // 第 5 步：清理烦人的引文和系统标记，打扫战场
+        text = text.replace(/\[cite_(?:start|end|url)[^\]]*\]/gi, '');
+        text = text.replace(/[ \t]*\[(?:cite:)?[ \t]*\^?[\d\s,\-]+\](?![ \t]*[:(])/gi, '');
+
+        // 第 6 步：修复 Markdown 加粗内部带空格导致的失效问题
+        text = text.replace(/\*\*[ \t]*([^\n*]+?)[ \t]*\*\*/g, '**$1**');
+
+        // 第 7 步：执行 Markdown 渲染
         let html = marked.parse(text);
 
-        // 还原公式
-        mathVault.forEach(item => {
-            html = html.replace(item.key, item.content);
-        });
+        // 第 8 步：【核心修复】倒序还原占位符！ + 使用 split.join 防污染
+        // 倒序能完美解决任何极小概率发生的套娃问题，保证公式绝对安全送回DOM
+        for (let i = mathVault.length - 1; i >= 0; i--) {
+            html = html.split(mathVault[i].key).join(mathVault[i].content);
+        }
 
         preview.innerHTML = html;
 
-        // 渲染 KaTeX
-        renderMathInElement(preview, {
-            delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '\\[', right: '\\]', display: true},
-                {left: '$', right: '$', display: false},
-                {left: '\\(', right: '\\)', display: false}
-            ],
-            throwOnError: false
-        });
+        // 最后：交给 KaTeX 进行优雅的数学渲染
+        try {
+            renderMathInElement(preview, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false,
+                errorColor: '#ef4444'
+            });
+        } catch (e) {
+            console.error("KaTeX Error:", e);
+        }
 
-        // 渲染高亮
+        // 代码块高亮
         preview.querySelectorAll('pre code').forEach((el) => {
-            hljs.highlightElement(el);
+            try { hljs.highlightElement(el); } catch (e) {}
         });
     }
 
@@ -194,9 +213,6 @@
         const savedDraft = localStorage.getItem('mathprotect_draft');
         if (savedDraft) {
             editor.value = savedDraft;
-        } else {
-            // 默认填充了你刚刚报错的这段文本，可以立刻看到修复效果
-            editor.value = "**① 题目分析（已知条件 + 求解目标）**\n已知由组分A和组分B组成的二元溶液中，组分A的物质的量 $n_A=1$ mol，组分B的摩尔分数 $x_B=0.8$。";
         }
         updatePreview();
     });
