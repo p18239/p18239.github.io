@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Parser - Web Safe Edition</title>
+    <title>AI Parser - The Ultimate Edition</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/contrib/auto-render.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/highlight.min.js"></script>
 
     <style>
         :root {
@@ -25,7 +25,7 @@
         header { padding: 12px 24px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .logo { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px; }
         .logo span { color: var(--accent); }
-        .badge { font-size: 10px; background: #8b5cf6; color: #ffffff; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: bold; }
+        .badge { font-size: 10px; background: #000000; color: #ffffff; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: bold; letter-spacing: 0.5px; }
         .toolbar { display: flex; gap: 12px; }
         button { background: var(--panel); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 6px; }
         button:hover { background: #f9fafb; color: var(--text-main); border-color: #d1d5db; }
@@ -67,7 +67,7 @@
 <body>
 
 <header>
-    <div class="logo"><span>Math</span>Protect <span class="badge">WEB SAFE</span></div>
+    <div class="logo"><span>Math</span>Protect <span class="badge">ULTIMATE</span></div>
     <div class="toolbar">
         <button id="btn-copy" title="复制原文">📋 <span>复制原文</span></button>
         <button id="btn-clear" title="清空内容">🗑️ <span>清空</span></button>
@@ -78,7 +78,7 @@
 <div class="main-container" id="main-container">
     <div class="editor-box">
         <div class="label">INPUT AREA</div>
-        <textarea id="editor" placeholder="在此粘贴... 本地和线上版本均可丝滑运行。"></textarea>
+        <textarea id="editor" placeholder="在此粘贴... 终极防爆破版本。"></textarea>
     </div>
     <div class="preview-box">
         <div class="label">PREVIEW</div>
@@ -87,11 +87,6 @@
 </div>
 
 <script>
-    // 增加全局错误捕捉，如果线上还有异常，按 F12 会有更清晰的提示，不至于直接死寂
-    window.onerror = function(msg, url, line) {
-        console.warn("解析引擎捕获到异常:", msg, "在行:", line);
-    };
-
     const editor = document.getElementById('editor');
     const preview = document.getElementById('preview');
     const mainContainer = document.getElementById('main-container');
@@ -99,80 +94,94 @@
     const btnClear = document.getElementById('btn-clear');
     const btnCopy = document.getElementById('btn-copy');
 
-    // 确保 marked 加载成功后再配置
-    if (typeof marked !== 'undefined') {
-        marked.use({ breaks: true, gfm: true });
-    } else {
-        preview.innerHTML = '<div style="color:red; padding: 20px;">Markdown 核心库加载失败，请检查网络连接或刷新页面。</div>';
-    }
+    marked.use({ breaks: true, gfm: true });
 
     function updatePreview() {
-        if (typeof marked === 'undefined') return;
-
         let text = editor.value;
-        try { localStorage.setItem('mathprotect_draft', text); } catch(e) {} // 捕获极少数浏览器的隐私模式报错
+        localStorage.setItem('mathprotect_draft', text);
 
         if (!text.trim()) {
             preview.innerHTML = '<div style="text-align: center; color: #9ca3af; margin-top: 40px;">等待输入内容...</div>';
             return;
         }
 
+        // ==========================================
+        // 核心修复 1：杀灭所有阻碍正则匹配的隐形幽灵字符
+        // ==========================================
+        text = text.replace(/[\u200b\u200c\u200d\uFEFF]/g, '');
+
         const mathVault = [];
         let vaultIndex = 0;
+        
+        // ==========================================
+        // 核心修复 2：安全气囊 (Airbag Space)
+        // 强行在占位符前后注入空格，物理隔离 Markdown 和 LaTeX，彻底解决粘连炸毁问题
+        // ==========================================
         const saveMath = (content) => {
             const key = `KATHMATH${vaultIndex++}END`;
             mathVault.push({ key, content });
-            return key;
+            return ` ${key} `; 
         };
 
-        text = text.replace(/(^|[^$])\\begin\{([a-z*]+)\}([\s\S]+?)\\end\{\2\}(?!\$)/gi, (match, prefix, env, content) => {
-            return prefix + saveMath('$$\n\\begin{' + env + '}' + content + '\\end{' + env + '}\n$$');
-        });
-
+        // 1. 标准块级和行内公式提取
+        text = text.replace(/(^|[^$])\\begin\{([a-z*]+)\}([\s\S]+?)\\end\{\2\}(?!\$)/gi, (m, p, env, c) => p + saveMath(`$$\n\\begin{${env}}${c}\\end{${env}}\n$$`));
         text = text.replace(/\$\$([\s\S]+?)\$\$/g, (m) => saveMath(m));
         text = text.replace(/\\\[([\s\S]+?)\\\]/g, (m) => saveMath(m));
         text = text.replace(/\\\(([\s\S]+?)\\\)/g, (m) => saveMath(m));
-        
-        text = text.replace(/(^|[^$\\])\$([^$]+?)\$(?!\d)/g, (match, prefix, mathContent) => {
-            return prefix + saveMath('$' + mathContent + '$');
+        text = text.replace(/(^|[^$\\])\$([^$]+?)\$(?!\d)/g, (m, p, c) => p + saveMath(`$${c}$`));
+
+        // ==========================================
+        // 核心修复 3：复合裸奔 LaTeX 拯救器 (专治 \left \frac 等复杂结构)
+        // ==========================================
+        text = text.replace(/(^|[^$\\])(\\[a-zA-Z]+[A-Za-z0-9\\(){}[\]_^\s,.\-+=/'<>]*?)(?=[ \t]*[\u4e00-\u9fa5*：，。？！、\n]|$)/g, (match, prefix, mathContent) => {
+            if (/[_{}^=]|\\[a-zA-Z]/.test(mathContent)) {
+                return prefix + saveMath('$' + mathContent.trim() + '$');
+            }
+            return match;
         });
 
-        text = text.replace(/(^|[^a-zA-Z0-9_\\])([a-zA-Z]_([a-zA-Z0-9]+|\{[a-zA-Z0-9]+\}))([^a-zA-Z0-9_]|$)/g, (match, p1, p2, p3, p4) => {
+        // 4. 游离下标变量拯救器 (专治 n_A, x_B)
+        text = text.replace(/(^|[^a-zA-Z0-9_\\])([a-zA-Z]_([a-zA-Z0-9]+|\{[a-zA-Z0-9,]+\}))([^a-zA-Z0-9_]|$)/g, (match, p1, p2, p3, p4) => {
             return p1 + saveMath('$' + p2 + '$') + p4;
         });
 
+        // 5. 无痕清理底层 AI 标记与多余换行符
         text = text.replace(/\[cite_(?:start|end|url)[^\]]*\]/gi, '');
         text = text.replace(/[ \t]*\[(?:cite:)?[ \t]*\^?[\d\s,\-]+\](?![ \t]*[:(])/gi, '');
         text = text.replace(/\*\*[ \t]*([^\n*]+?)[ \t]*\*\*/g, '**$1**');
 
+        // 执行 Markdown 渲染
         let html = marked.parse(text);
 
+        // ==========================================
+        // 核心修复 4：倒序解药 (Split & Join 彻底防止正则碰撞)
+        // 注意：因为加入了气囊空格，HTML 渲染多余的空格会自动折叠，毫不影响排版
+        // ==========================================
         for (let i = mathVault.length - 1; i >= 0; i--) {
             html = html.split(mathVault[i].key).join(mathVault[i].content);
         }
 
         preview.innerHTML = html;
 
-        if (typeof renderMathInElement !== 'undefined') {
-            try {
-                renderMathInElement(preview, {
-                    delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '\\[', right: '\\]', display: true},
-                        {left: '$', right: '$', display: false},
-                        {left: '\\(', right: '\\)', display: false}
-                    ],
-                    throwOnError: false,
-                    errorColor: '#ef4444'
-                });
-            } catch (e) { console.error("KaTeX 渲染出错:", e); }
+        // KaTeX 渲染
+        try {
+            renderMathInElement(preview, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false,
+                errorColor: '#ef4444'
+            });
+        } catch (e) {
+            console.error("KaTeX Error:", e);
         }
 
-        if (typeof hljs !== 'undefined') {
-            preview.querySelectorAll('pre code').forEach((el) => {
-                try { hljs.highlightElement(el); } catch (e) {}
-            });
-        }
+        preview.querySelectorAll('pre code').forEach((el) => {
+            try { hljs.highlightElement(el); } catch (e) {}
+        });
     }
 
     let renderTimer;
@@ -211,13 +220,13 @@
     });
 
     window.addEventListener('DOMContentLoaded', () => {
-        try {
-            const savedDraft = localStorage.getItem('mathprotect_draft');
-            if (savedDraft) editor.value = savedDraft;
-        } catch(e) {}
-        
-        // 延时初次渲染，确保线上 CDN 完全就绪
-        setTimeout(updatePreview, 100);
+        const savedDraft = localStorage.getItem('mathprotect_draft');
+        if (savedDraft) {
+            editor.value = savedDraft;
+        } else {
+            editor.value = "这是包含前面所有错误场景的终极防爆破测试：\n\n1. 粘连测试：**选项(C)**\\left( \\frac{\\partial H}{\\partial n_B} \\right)_{S,p,n_A}符合要求。\n\n2. 幽灵字符测试：将 VBVB​ = VAVA​ + \\left( \\frac{\\partial VmVm​}{\\partial xBxB​} \\right) 代入。\n\n3. 裸奔变量：反应物 n_A 和产物 x_B 的比例。";
+        }
+        updatePreview();
     });
 </script>
 
