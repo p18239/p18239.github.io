@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Parser - High Performance</title>
+    <title>AI Parser - The Ultimate Edition</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -25,7 +25,7 @@
         header { padding: 12px 24px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .logo { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px; }
         .logo span { color: var(--accent); }
-        .badge { font-size: 10px; background: #ef4444; color: #ffffff; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: bold; letter-spacing: 0.5px; }
+        .badge { font-size: 10px; background: #000000; color: #ffffff; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: bold; letter-spacing: 0.5px; }
         .toolbar { display: flex; gap: 12px; }
         button { background: var(--panel); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 6px; }
         button:hover { background: #f9fafb; color: var(--text-main); border-color: #d1d5db; }
@@ -52,8 +52,10 @@
         .markdown-body blockquote { border-left: 4px solid var(--border); padding-left: 1em; color: var(--text-muted); margin-bottom: 1.2em; }
         .markdown-body ul, .markdown-body ol { padding-left: 1.5em; margin-bottom: 1.2em; }
         
-        /* 公式防溢出滚动 */
-        .katex-display { margin: 1.2em 0; overflow-x: auto; overflow-y: hidden; padding: 10px 0; }
+        /* 公式防溢出滚动 - 已极度压缩上下间距 */
+        .katex-display { margin: 0.7em 0 !important; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+        /* 如果公式被 Markdown 解析为了段落，自动消除段落底部的多余留白 */
+        .markdown-body p:has(> .katex-display) { margin-bottom: 0 !important; }
 
         @media (max-width: 768px) {
             header { padding: 12px 16px; }
@@ -68,7 +70,7 @@
 <body>
 
 <header>
-    <div class="logo"><span>Math</span>Protect <span class="badge">LONG TEXT PERF</span></div>
+    <div class="logo"><span>Math</span>Protect <span class="badge">ULTIMATE</span></div>
     <div class="toolbar">
         <button id="btn-copy" title="复制原文">📋 <span>复制原文</span></button>
         <button id="btn-clear" title="清空内容">🗑️ <span>清空</span></button>
@@ -79,7 +81,7 @@
 <div class="main-container" id="main-container">
     <div class="editor-box">
         <div class="label">INPUT AREA</div>
-        <textarea id="editor" placeholder="在此粘贴超长文本... 性能已拉满。"></textarea>
+        <textarea id="editor" placeholder="在此粘贴... 终极防爆破版本。"></textarea>
     </div>
     <div class="preview-box">
         <div class="label">PREVIEW</div>
@@ -106,52 +108,61 @@
             return;
         }
 
-        // 清理隐形脏字符
+        // ==========================================
+        // 核心修复 1：杀灭所有阻碍正则匹配的隐形幽灵字符
+        // ==========================================
         text = text.replace(/[\u200b\u200c\u200d\uFEFF]/g, '');
 
-        // 核心优化 1：使用哈希字典，长文本下 O(1) 性能还原
-        const mathVault = {};
+        const mathVault = [];
         let vaultIndex = 0;
         
+        // ==========================================
+        // 核心修复 2：安全气囊 (Airbag Space)
+        // 强行在占位符前后注入空格，物理隔离 Markdown 和 LaTeX，彻底解决粘连炸毁问题
+        // ==========================================
         const saveMath = (content) => {
             const key = `KATHMATH${vaultIndex++}END`;
-            mathVault[key] = content;
-            return ` ${key} `; // 依然保留防粘连的安全气囊
+            mathVault.push({ key, content });
+            return ` ${key} `; 
         };
 
-        // 1. 标准公式提取：剔除所有贪婪的“半算子纠错”，只处理规矩的格式
-        // 自动补全裸奔的 \begin 环境
+        // 1. 标准块级和行内公式提取
         text = text.replace(/(^|[^$])\\begin\{([a-z*]+)\}([\s\S]+?)\\end\{\2\}(?!\$)/gi, (m, p, env, c) => p + saveMath(`$$\n\\begin{${env}}${c}\\end{${env}}\n$$`));
-        
-        // 块级公式
         text = text.replace(/\$\$([\s\S]+?)\$\$/g, (m) => saveMath(m));
         text = text.replace(/\\\[([\s\S]+?)\\\]/g, (m) => saveMath(m));
         text = text.replace(/\\\(([\s\S]+?)\\\)/g, (m) => saveMath(m));
-        
-        // 核心优化 2：限制行内公式 $...$ 绝对不允许跨行匹配，防止长文本正则表达式崩溃
-        text = text.replace(/(^|[^$\\])\$([^$\n]+?)\$(?!\d)/g, (m, p, c) => p + saveMath(`$${c}$`));
+        text = text.replace(/(^|[^$\\])\$([^$]+?)\$(?!\d)/g, (m, p, c) => p + saveMath(`$${c}$`));
 
-        // 核心优化 3：只保留最安全的单字符下划线补漏，砍掉复杂的长公式裸奔推断
+        // ==========================================
+        // 核心修复 3：复合裸奔 LaTeX 拯救器 (专治 \left \frac 等复杂结构)
+        // ==========================================
+        text = text.replace(/(^|[^$\\])(\\[a-zA-Z]+[A-Za-z0-9\\(){}[\]_^\s,.\-+=/'<>]*?)(?=[ \t]*[\u4e00-\u9fa5*：，。？！、\n]|$)/g, (match, prefix, mathContent) => {
+            if (/[_{}^=]|\\[a-zA-Z]/.test(mathContent)) {
+                return prefix + saveMath('$' + mathContent.trim() + '$');
+            }
+            return match;
+        });
+
+        // 4. 游离下标变量拯救器 (专治 n_A, x_B)
         text = text.replace(/(^|[^a-zA-Z0-9_\\])([a-zA-Z]_([a-zA-Z0-9]+|\{[a-zA-Z0-9,]+\}))([^a-zA-Z0-9_]|$)/g, (match, p1, p2, p3, p4) => {
             return p1 + saveMath('$' + p2 + '$') + p4;
         });
 
-        // 无痕清理 AI 引用标记（严格限制不跨行）
+        // 5. 无痕清理底层 AI 标记与多余换行符
         text = text.replace(/\[cite_(?:start|end|url)[^\]]*\]/gi, '');
         text = text.replace(/[ \t]*\[(?:cite:)?[ \t]*\^?[\d\s,\-]+\](?![ \t]*[:(])/gi, '');
-        
-        // 修复粗体内部空格导致 Markdown 崩盘
         text = text.replace(/\*\*[ \t]*([^\n*]+?)[ \t]*\*\*/g, '**$1**');
 
         // 执行 Markdown 渲染
         let html = marked.parse(text);
 
-        // 核心优化 4：全局单次扫描还原，取代 for 循环的 split.join
-        // 即使有 1 万个公式，这里也只需执行 1 次 replace，极大幅度降低内存开销
-        html = html.replace(/ KATHMATH(\d+)END /g, (match, id) => {
-            const key = `KATHMATH${id}END`;
-            return mathVault[key] ? mathVault[key] : match;
-        });
+        // ==========================================
+        // 核心修复 4：倒序解药 (Split & Join 彻底防止正则碰撞)
+        // 注意：因为加入了气囊空格，HTML 渲染多余的空格会自动折叠，毫不影响排版
+        // ==========================================
+        for (let i = mathVault.length - 1; i >= 0; i--) {
+            html = html.split(mathVault[i].key).join(mathVault[i].content);
+        }
 
         preview.innerHTML = html;
 
@@ -164,27 +175,24 @@
                     {left: '$', right: '$', display: false},
                     {left: '\\(', right: '\\)', display: false}
                 ],
-                throwOnError: false, // 保证公式出错不崩盘
+                throwOnError: false,
                 errorColor: '#ef4444'
             });
         } catch (e) {
             console.error("KaTeX Error:", e);
         }
 
-        // 代码高亮
         preview.querySelectorAll('pre code').forEach((el) => {
             try { hljs.highlightElement(el); } catch (e) {}
         });
     }
 
-    // 核心优化 5：防抖延长至 800ms，为长文本留出充足计算性能，防止打字卡顿
     let renderTimer;
     editor.addEventListener('input', () => {
         clearTimeout(renderTimer);
-        renderTimer = setTimeout(updatePreview, 800); 
+        renderTimer = setTimeout(updatePreview, 200);
     });
 
-    // 交互逻辑
     let isReadOnly = false;
     btnRead.addEventListener('click', () => {
         isReadOnly = !isReadOnly;
@@ -218,6 +226,8 @@
         const savedDraft = localStorage.getItem('mathprotect_draft');
         if (savedDraft) {
             editor.value = savedDraft;
+        } else {
+            editor.value = "这是包含前面所有错误场景的终极防爆破测试：\n\n1. 粘连测试：**选项(C)**\\left( \\frac{\\partial H}{\\partial n_B} \\right)_{S,p,n_A}符合要求。\n\n2. 幽灵字符测试：将 VBVB​ = VAVA​ + \\left( \\frac{\\partial VmVm​}{\\partial xBxB​} \\right) 代入。\n\n3. 裸奔变量：反应物 n_A 和产物 x_B 的比例。";
         }
         updatePreview();
     });
