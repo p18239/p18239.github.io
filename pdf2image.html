@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF 转图片型 PDF</title>
+  <link href="favicon.png" rel="SHORTCUT ICON">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --text: #111827;
+      --muted: #6b7280;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+      color: var(--text);
+    }
+    .container {
+      max-width: 920px;
+      margin: 32px auto;
+      padding: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    input[type="file"], select {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    button:not(:disabled):active {
+      transform: scale(0.98);
+    }
+    .progress {
+      margin-top: 16px;
+      min-height: 24px;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .hint {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .download {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .download[hidden] {
+      display: none;
+    }
+    .footer {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>PDF 自动转图片型 PDF</h1>
+      <div class="subtitle">将每两页合并为一页输出，生成纯图片 PDF（无可选文字层）。</div>
+    </header>
+
+    <div class="controls">
+      <label>
+        选择 PDF 文件
+        <input type="file" id="pdf-file" accept="application/pdf">
+      </label>
+      <label>
+        清晰度 (DPI)
+        <select id="dpi">
+          <option value="300">300 DPI</option>
+          <option value="400">400 DPI</option>
+          <option value="600">600 DPI</option>
+        </select>
+      </label>
+      <label>
+        拼接方式
+        <select id="layout">
+          <option value="horizontal">左右拼接</option>
+          <option value="vertical">上下拼接</option>
+        </select>
+      </label>
+    </div>
+
+    <button id="start" disabled>开始转换</button>
+    <div id="progress" class="progress"></div>
+    <a id="download" class="download" hidden>⬇️ 下载转换后的 PDF</a>
+    <div class="hint">提示：600 DPI 会明显增大文件体积，请耐心等待。</div>
+
+    <div class="footer">
+      处理逻辑为浏览器本地执行，不上传服务器；PDF 页数没有限制，但大文件会消耗更多内存与时间。
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script>
+    const fileInput = document.getElementById('pdf-file');
+    const dpiSelect = document.getElementById('dpi');
+    const layoutSelect = document.getElementById('layout');
+    const startButton = document.getElementById('start');
+    const progress = document.getElementById('progress');
+    const downloadLink = document.getElementById('download');
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+    const setBusy = (busy) => {
+      fileInput.disabled = busy;
+      dpiSelect.disabled = busy;
+      layoutSelect.disabled = busy;
+      startButton.disabled = busy || !fileInput.files.length;
+    };
+
+    const resetDownload = () => {
+      downloadLink.hidden = true;
+      downloadLink.removeAttribute('href');
+      downloadLink.removeAttribute('download');
+    };
+
+    const canvasToBytes = (canvas) => new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('图像转换失败'));
+          return;
+        }
+        blob.arrayBuffer().then((buffer) => resolve(new Uint8Array(buffer)));
+      }, 'image/png');
+    });
+
+    const renderPage = async (page, scale) => {
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      return { canvas, viewport };
+    };
+
+    fileInput.addEventListener('change', () => {
+      resetDownload();
+      progress.textContent = '';
+      startButton.disabled = !fileInput.files.length;
+    });
+
+    startButton.addEventListener('click', async () => {
+      if (!fileInput.files.length) return;
+      resetDownload();
+      progress.textContent = '正在读取文件...';
+      setBusy(true);
+
+      try {
+        const file = fileInput.files[0];
+        const data = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data }).promise;
+        const outputPdf = await PDFLib.PDFDocument.create();
+
+        const dpi = Number(dpiSelect.value);
+        const scale = dpi / 72;
+        const totalPairs = Math.ceil(pdf.numPages / 2);
+
+        for (let pairIndex = 0; pairIndex < totalPairs; pairIndex += 1) {
+          const leftIndex = pairIndex * 2 + 1;
+          const rightIndex = leftIndex + 1;
+
+          progress.textContent = `正在处理第 ${pairIndex + 1} / ${totalPairs} 组...`;
+
+          const leftPage = await pdf.getPage(leftIndex);
+          const rightPage = rightIndex <= pdf.numPages ? await pdf.getPage(rightIndex) : null;
+
+          const leftBase = leftPage.getViewport({ scale: 1 });
+          const rightBase = rightPage ? rightPage.getViewport({ scale: 1 }) : leftBase;
+
+          const leftRender = await renderPage(leftPage, scale);
+          const rightRender = rightPage ? await renderPage(rightPage, scale) : null;
+
+          let pageWidthPts;
+          let pageHeightPts;
+          let offsetXPts = 0;
+          let offsetYPts = 0;
+
+          if (layoutSelect.value === 'horizontal') {
+            pageWidthPts = leftBase.width + rightBase.width;
+            pageHeightPts = Math.max(leftBase.height, rightBase.height);
+            offsetXPts = leftBase.width;
+          } else {
+            pageWidthPts = Math.max(leftBase.width, rightBase.width);
+            pageHeightPts = leftBase.height + rightBase.height;
+            offsetYPts = leftBase.height;
+          }
+
+          const compositeCanvas = document.createElement('canvas');
+          compositeCanvas.width = Math.ceil(pageWidthPts * scale);
+          compositeCanvas.height = Math.ceil(pageHeightPts * scale);
+          const compositeCtx = compositeCanvas.getContext('2d');
+          compositeCtx.fillStyle = '#ffffff';
+          compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+          compositeCtx.drawImage(leftRender.canvas, 0, 0);
+
+          if (rightRender) {
+            compositeCtx.drawImage(
+              rightRender.canvas,
+              Math.round(offsetXPts * scale),
+              Math.round(offsetYPts * scale)
+            );
+          }
+
+          const imageBytes = await canvasToBytes(compositeCanvas);
+          const image = await outputPdf.embedPng(imageBytes);
+          const page = outputPdf.addPage([pageWidthPts, pageHeightPts]);
+          page.drawImage(image, { x: 0, y: 0, width: pageWidthPts, height: pageHeightPts });
+
+          leftRender.canvas.width = 0;
+          leftRender.canvas.height = 0;
+          if (rightRender) {
+            rightRender.canvas.width = 0;
+            rightRender.canvas.height = 0;
+          }
+          compositeCanvas.width = 0;
+          compositeCanvas.height = 0;
+        }
+
+        progress.textContent = '正在生成 PDF...';
+        const pdfBytes = await outputPdf.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const baseName = file.name.replace(/\.pdf$/i, '') || 'output';
+        downloadLink.href = url;
+        downloadLink.download = `${baseName}_image.pdf`;
+        downloadLink.hidden = false;
+        progress.textContent = '完成 ✅';
+      } catch (error) {
+        console.error(error);
+        progress.textContent = `处理失败：${error.message || error}`;
+      } finally {
+        setBusy(false);
+      }
+    });
+  </script>
+</body>
+</html>
