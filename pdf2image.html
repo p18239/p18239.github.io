@@ -155,8 +155,8 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="vendor/pdf.min.js"></script>
+  <script src="vendor/pdf-lib.min.js"></script>
   <script>
     const fileInput = document.getElementById('pdf-file');
     const dpiSelect = document.getElementById('dpi');
@@ -166,7 +166,7 @@
     const downloadLink = document.getElementById('download');
     let currentUrl = null;
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
 
     const setBusy = (busy) => {
       fileInput.disabled = busy;
@@ -244,20 +244,15 @@
           const leftRender = await renderPage(leftPage, scale);
           const rightRender = rightPage ? await renderPage(rightPage, scale) : null;
 
-          let pageWidthPts;
-          let pageHeightPts;
-          let offsetXPts = 0;
-          let offsetYPts = 0;
-
-          if (layoutSelect.value === 'horizontal') {
-            pageWidthPts = leftBase.width + rightBase.width;
-            pageHeightPts = Math.max(leftBase.height, rightBase.height);
-            offsetXPts = leftBase.width;
-          } else {
-            pageWidthPts = Math.max(leftBase.width, rightBase.width);
-            pageHeightPts = leftBase.height + rightBase.height;
-            offsetYPts = leftBase.height;
-          }
+          const isHorizontal = layoutSelect.value === 'horizontal';
+          const pageWidthPts = isHorizontal
+            ? leftBase.width + rightBase.width
+            : Math.max(leftBase.width, rightBase.width);
+          const pageHeightPts = isHorizontal
+            ? Math.max(leftBase.height, rightBase.height)
+            : leftBase.height + rightBase.height;
+          const offsetXPts = isHorizontal ? leftBase.width : 0;
+          const offsetYPts = isHorizontal ? 0 : leftBase.height;
 
           const compositeCanvas = document.createElement('canvas');
           compositeCanvas.width = Math.ceil(pageWidthPts * scale);
@@ -294,14 +289,17 @@
         const pdfBytes = await outputPdf.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         currentUrl = URL.createObjectURL(blob);
-        const baseName = file.name.replace(/\.pdf$/i, '') || 'output';
+        const rawName = file.name || '';
+        const trimmed = rawName.toLowerCase().endsWith('.pdf') ? rawName.slice(0, -4) : rawName;
+        const baseName = trimmed.replace(/\.+$/, '').trim() || 'output';
         downloadLink.href = currentUrl;
         downloadLink.download = `${baseName}_image.pdf`;
         downloadLink.hidden = false;
         progress.textContent = '完成 ✅';
       } catch (error) {
         console.error(error);
-        progress.textContent = `处理失败：${error.message || error}`;
+        const message = error && error.message ? error.message : String(error || '未知错误');
+        progress.textContent = `处理失败：${message}`;
       } finally {
         setBusy(false);
       }
