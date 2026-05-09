@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF 转图片型 PDF</title>
+  <link href="favicon.png" rel="SHORTCUT ICON">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --text: #111827;
+      --muted: #6b7280;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+      color: var(--text);
+    }
+    .container {
+      max-width: 920px;
+      margin: 32px auto;
+      padding: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    input[type="file"], select {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    button.secondary {
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    button:not(:disabled):active {
+      transform: scale(0.98);
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+    }
+    label.disabled {
+      opacity: 0.6;
+    }
+    .progress {
+      margin-top: 16px;
+      min-height: 24px;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .hint {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .download {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .download[hidden] {
+      display: none;
+    }
+    .preview-panel {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+    }
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .preview-note {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .preview-status {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    #preview-canvas {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      background: #f9fafb;
+      display: block;
+    }
+    .footer {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>PDF 自动转图片型 PDF</h1>
+      <div class="subtitle">可选拼接两页输出，生成纯图片 PDF（无可选文字层）。</div>
+    </header>
+
+    <div class="controls">
+      <label>
+        选择 PDF 文件
+        <input type="file" id="pdf-file" accept="application/pdf">
+      </label>
+      <label>
+        清晰度 (DPI)
+        <select id="dpi">
+          <option value="300">300 DPI</option>
+          <option value="400">400 DPI</option>
+          <option value="600">600 DPI</option>
+        </select>
+      </label>
+      <label>
+        是否拼接两页
+        <div class="checkbox-row">
+          <input type="checkbox" id="merge" checked>
+          <span>拼接为一页</span>
+        </div>
+      </label>
+      <label id="layout-label">
+        拼接方式
+        <select id="layout">
+          <option value="horizontal">左右拼接</option>
+          <option value="vertical">上下拼接</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button id="start" disabled>开始转换</button>
+      <button id="preview-btn" class="secondary" disabled>生成预览</button>
+    </div>
+    <div id="progress" class="progress"></div>
+    <a id="download" class="download" hidden>⬇️ 下载转换后的 PDF</a>
+    <div class="hint">提示：600 DPI 会明显增大文件体积，请耐心等待。</div>
+
+    <div class="preview-panel">
+      <div class="preview-header">
+        <span>输出预览</span>
+        <span class="preview-note">仅展示第 1 组输出</span>
+      </div>
+      <div id="preview-status" class="preview-status">尚未生成预览。</div>
+      <canvas id="preview-canvas" hidden></canvas>
+    </div>
+
+    <div class="footer">
+      处理逻辑为浏览器本地执行，不上传服务器；PDF 页数没有限制，但大文件会消耗更多内存与时间。
+    </div>
+  </div>
+
+  <script src="vendor/pdf.min.js"></script>
+  <script src="vendor/pdf-lib.min.js"></script>
+  <script>
+    const fileInput = document.getElementById('pdf-file');
+    const dpiSelect = document.getElementById('dpi');
+    const mergeToggle = document.getElementById('merge');
+    const layoutSelect = document.getElementById('layout');
+    const layoutLabel = document.getElementById('layout-label');
+    const startButton = document.getElementById('start');
+    const previewButton = document.getElementById('preview-btn');
+    const progress = document.getElementById('progress');
+    const downloadLink = document.getElementById('download');
+    const previewCanvas = document.getElementById('preview-canvas');
+    const previewStatus = document.getElementById('preview-status');
+    let currentUrl = null;
+    let selectedFile = null;
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
+
+    const setBusy = (busy) => {
+      const hasFile = Boolean(selectedFile);
+      fileInput.disabled = busy;
+      dpiSelect.disabled = busy;
+      mergeToggle.disabled = busy;
+      layoutSelect.disabled = busy || !mergeToggle.checked;
+      layoutLabel.classList.toggle('disabled', layoutSelect.disabled);
+      startButton.disabled = busy || !hasFile;
+      previewButton.disabled = busy || !hasFile;
+    };
+
+    const resetDownload = () => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+        currentUrl = null;
+      }
+      downloadLink.hidden = true;
+      downloadLink.removeAttribute('href');
+      downloadLink.removeAttribute('download');
+    };
+
+    const resetPreview = () => {
+      previewStatus.textContent = '尚未生成预览。';
+      previewCanvas.hidden = true;
+      previewCanvas.width = 0;
+      previewCanvas.height = 0;
+    };
+
+    const canvasToBytes = (canvas) => new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('图像转换失败'));
+          return;
+        }
+        blob.arrayBuffer().then((buffer) => resolve(new Uint8Array(buffer)));
+      }, 'image/png');
+    });
+
+    const renderPage = async (page, scale) => {
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      return { canvas, viewport };
+    };
+
+    const buildCompositeCanvas = (options) => {
+      const {
+        leftRender,
+        rightRender,
+        leftBase,
+        rightBase,
+        scale,
+        isMerge,
+        isHorizontal
+      } = options;
+
+      const hasRight = Boolean(isMerge && rightRender && rightBase);
+      const pageWidthPts = !hasRight
+        ? leftBase.width
+        : (isHorizontal ? leftBase.width + rightBase.width : Math.max(leftBase.width, rightBase.width));
+      const pageHeightPts = !hasRight
+        ? leftBase.height
+        : (isHorizontal ? Math.max(leftBase.height, rightBase.height) : leftBase.height + rightBase.height);
+      const offsetXPts = hasRight && isHorizontal ? leftBase.width : 0;
+      const offsetYPts = hasRight && !isHorizontal ? leftBase.height : 0;
+
+      const compositeCanvas = document.createElement('canvas');
+      compositeCanvas.width = Math.ceil(pageWidthPts * scale);
+      compositeCanvas.height = Math.ceil(pageHeightPts * scale);
+      const compositeCtx = compositeCanvas.getContext('2d');
+      compositeCtx.fillStyle = '#ffffff';
+      compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+      compositeCtx.drawImage(leftRender.canvas, 0, 0);
+
+      if (hasRight) {
+        compositeCtx.drawImage(
+          rightRender.canvas,
+          Math.round(offsetXPts * scale),
+          Math.round(offsetYPts * scale)
+        );
+      }
+
+      return { compositeCanvas, pageWidthPts, pageHeightPts, hasRight };
+    };
+
+    const updateLayoutState = () => {
+      layoutSelect.disabled = !mergeToggle.checked;
+      layoutLabel.classList.toggle('disabled', layoutSelect.disabled);
+    };
+
+    fileInput.addEventListener('change', () => {
+      selectedFile = fileInput.files[0] || null;
+      resetDownload();
+      resetPreview();
+      progress.textContent = '';
+      startButton.disabled = !selectedFile;
+      previewButton.disabled = !selectedFile;
+    });
+
+    dpiSelect.addEventListener('change', resetPreview);
+    layoutSelect.addEventListener('change', resetPreview);
+    mergeToggle.addEventListener('change', () => {
+      updateLayoutState();
+      resetPreview();
+    });
+
+    updateLayoutState();
+    resetPreview();
+
+    previewButton.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      resetPreview();
+      previewStatus.textContent = '正在生成预览...';
+      setBusy(true);
+
+      try {
+        const file = selectedFile;
+        const data = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data }).promise;
+        const dpi = Number(dpiSelect.value);
+        const scale = dpi / 72;
+        const isMerge = mergeToggle.checked;
+        const isHorizontal = layoutSelect.value === 'horizontal';
+
+        const leftIndex = 1;
+        const rightIndex = isMerge ? 2 : null;
+        const leftPage = await pdf.getPage(leftIndex);
+        const rightPage = rightIndex && rightIndex <= pdf.numPages ? await pdf.getPage(rightIndex) : null;
+        const leftBase = leftPage.getViewport({ scale: 1 });
+        const rightBase = rightPage ? rightPage.getViewport({ scale: 1 }) : null;
+        const leftRender = await renderPage(leftPage, scale);
+        const rightRender = rightPage ? await renderPage(rightPage, scale) : null;
+
+        const { compositeCanvas } = buildCompositeCanvas({
+          leftRender,
+          rightRender,
+          leftBase,
+          rightBase,
+          scale,
+          isMerge,
+          isHorizontal
+        });
+
+        previewCanvas.width = compositeCanvas.width;
+        previewCanvas.height = compositeCanvas.height;
+        const previewCtx = previewCanvas.getContext('2d');
+        previewCtx.drawImage(compositeCanvas, 0, 0);
+        previewCanvas.hidden = false;
+        previewStatus.textContent = '预览生成完成。';
+
+        leftRender.canvas.width = 0;
+        leftRender.canvas.height = 0;
+        if (rightRender) {
+          rightRender.canvas.width = 0;
+          rightRender.canvas.height = 0;
+        }
+        compositeCanvas.width = 0;
+        compositeCanvas.height = 0;
+      } catch (error) {
+        console.error(error);
+        const message = error && error.message ? error.message : String(error || '未知错误');
+        previewStatus.textContent = `预览失败：${message}`;
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    startButton.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      resetDownload();
+      progress.textContent = '正在读取文件...';
+      setBusy(true);
+
+      try {
+        const file = selectedFile;
+        const data = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data }).promise;
+        const outputPdf = await PDFLib.PDFDocument.create();
+
+        const dpi = Number(dpiSelect.value);
+        const scale = dpi / 72;
+        const isMerge = mergeToggle.checked;
+        const totalPairs = isMerge ? Math.ceil(pdf.numPages / 2) : pdf.numPages;
+        const groupLabel = isMerge ? '组' : '页';
+        const isHorizontal = layoutSelect.value === 'horizontal';
+
+        for (let pairIndex = 0; pairIndex < totalPairs; pairIndex += 1) {
+          const leftIndex = isMerge ? (pairIndex * 2 + 1) : (pairIndex + 1);
+          const rightIndex = isMerge ? leftIndex + 1 : null;
+
+          progress.textContent = `正在处理第 ${pairIndex + 1} / ${totalPairs} ${groupLabel}...`;
+
+          const leftPage = await pdf.getPage(leftIndex);
+          const rightPage = rightIndex && rightIndex <= pdf.numPages ? await pdf.getPage(rightIndex) : null;
+
+          const leftBase = leftPage.getViewport({ scale: 1 });
+          const rightBase = rightPage ? rightPage.getViewport({ scale: 1 }) : null;
+
+          const leftRender = await renderPage(leftPage, scale);
+          const rightRender = rightPage ? await renderPage(rightPage, scale) : null;
+
+          const { compositeCanvas, pageWidthPts, pageHeightPts } = buildCompositeCanvas({
+            leftRender,
+            rightRender,
+            leftBase,
+            rightBase,
+            scale,
+            isMerge,
+            isHorizontal
+          });
+
+          const imageBytes = await canvasToBytes(compositeCanvas);
+          const image = await outputPdf.embedPng(imageBytes);
+          const page = outputPdf.addPage([pageWidthPts, pageHeightPts]);
+          page.drawImage(image, { x: 0, y: 0, width: pageWidthPts, height: pageHeightPts });
+
+          leftRender.canvas.width = 0;
+          leftRender.canvas.height = 0;
+          if (rightRender) {
+            rightRender.canvas.width = 0;
+            rightRender.canvas.height = 0;
+          }
+          compositeCanvas.width = 0;
+          compositeCanvas.height = 0;
+        }
+
+        progress.textContent = '正在生成 PDF...';
+        const pdfBytes = await outputPdf.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        currentUrl = URL.createObjectURL(blob);
+        const rawName = file.name || '';
+        const trimmed = rawName.toLowerCase().endsWith('.pdf') ? rawName.slice(0, -4) : rawName;
+        const baseName = trimmed.replace(/\.+$/, '').trim() || 'output';
+        downloadLink.href = currentUrl;
+        downloadLink.download = `${baseName}_image.pdf`;
+        downloadLink.hidden = false;
+        progress.textContent = '完成 ✅';
+      } catch (error) {
+        console.error(error);
+        const message = error && error.message ? error.message : String(error || '未知错误');
+        progress.textContent = `处理失败：${message}`;
+      } finally {
+        setBusy(false);
+      }
+    });
+  </script>
+</body>
+</html>
