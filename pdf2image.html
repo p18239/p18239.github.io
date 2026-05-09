@@ -247,17 +247,19 @@
     const previewCanvas = document.getElementById('preview-canvas');
     const previewStatus = document.getElementById('preview-status');
     let currentUrl = null;
+    let selectedFile = null;
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
 
     const setBusy = (busy) => {
+      const hasFile = Boolean(selectedFile);
       fileInput.disabled = busy;
       dpiSelect.disabled = busy;
       mergeToggle.disabled = busy;
       layoutSelect.disabled = busy || !mergeToggle.checked;
       layoutLabel.classList.toggle('disabled', layoutSelect.disabled);
-      startButton.disabled = busy || !fileInput.files.length;
-      previewButton.disabled = busy || !fileInput.files.length;
+      startButton.disabled = busy || !hasFile;
+      previewButton.disabled = busy || !hasFile;
     };
 
     const resetDownload = () => {
@@ -345,11 +347,12 @@
     };
 
     fileInput.addEventListener('change', () => {
+      selectedFile = fileInput.files[0] || null;
       resetDownload();
       resetPreview();
       progress.textContent = '';
-      startButton.disabled = !fileInput.files.length;
-      previewButton.disabled = !fileInput.files.length;
+      startButton.disabled = !selectedFile;
+      previewButton.disabled = !selectedFile;
     });
 
     dpiSelect.addEventListener('change', resetPreview);
@@ -363,13 +366,13 @@
     resetPreview();
 
     previewButton.addEventListener('click', async () => {
-      if (!fileInput.files.length) return;
+      if (!selectedFile) return;
       resetPreview();
       previewStatus.textContent = '正在生成预览...';
       setBusy(true);
 
       try {
-        const file = fileInput.files[0];
+        const file = selectedFile;
         const data = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data }).promise;
         const dpi = Number(dpiSelect.value);
@@ -421,13 +424,13 @@
     });
 
     startButton.addEventListener('click', async () => {
-      if (!fileInput.files.length) return;
+      if (!selectedFile) return;
       resetDownload();
       progress.textContent = '正在读取文件...';
       setBusy(true);
 
       try {
-        const file = fileInput.files[0];
+        const file = selectedFile;
         const data = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data }).promise;
         const outputPdf = await PDFLib.PDFDocument.create();
