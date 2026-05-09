@@ -164,6 +164,7 @@
     const startButton = document.getElementById('start');
     const progress = document.getElementById('progress');
     const downloadLink = document.getElementById('download');
+    let currentUrl = null;
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
@@ -175,6 +176,10 @@
     };
 
     const resetDownload = () => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+        currentUrl = null;
+      }
       downloadLink.hidden = true;
       downloadLink.removeAttribute('href');
       downloadLink.removeAttribute('download');
@@ -288,9 +293,9 @@
         progress.textContent = '正在生成 PDF...';
         const pdfBytes = await outputPdf.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
+        currentUrl = URL.createObjectURL(blob);
         const baseName = file.name.replace(/\.pdf$/i, '') || 'output';
-        downloadLink.href = url;
+        downloadLink.href = currentUrl;
         downloadLink.download = `${baseName}_image.pdf`;
         downloadLink.hidden = false;
         progress.textContent = '完成 ✅';
